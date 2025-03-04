@@ -9,7 +9,7 @@ import time
 model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True)
 
 # Vehicle time allocation (seconds)
-vehicle_time = {'small': 2.5, 'heavy': 3.5, 'ambulance': 3.0}
+vehicle_time = {'small': 2.5, 'heavy': 3.5}
 
 # Initialize GUI window
 root = tk.Tk()
@@ -42,7 +42,6 @@ def load_images():
 # Process images using YOLO to detect vehicles and ambulances
 def process_images():
     vehicle_counts = []
-    ambulance_detected = False
 
     for i, img_path in enumerate(lane_file_paths):
         img = cv2.imread(img_path)
@@ -58,12 +57,10 @@ def process_images():
                 small_count += 1
             elif label in ['truck', 'bus']:  # Considering heavy vehicles
                 heavy_count += 1
-            elif label == 'ambulance':  # Ambulance detection
-                ambulance_detected = True
         
         vehicle_counts.append((small_count, heavy_count))
 
-    return vehicle_counts, ambulance_detected
+    return vehicle_counts
 
 # Calculate time for each lane based on vehicle count
 def calculate_time(vehicle_counts):
@@ -77,12 +74,6 @@ def calculate_time(vehicle_counts):
     return lane_times
 
 # Display green signal for each lane and stop after one cycle
-def give_green_signal(lane_times, ambulance_detected):
-    if ambulance_detected:
-        # Priority to the lane with an ambulance
-        print("Ambulance detected, prioritizing lane 1.")
-        display_signals(0, lane_times)  # For example, give green to lane 1
-        return  # Stop after one cycle as requested
 
     # Sort lanes by calculated time in ascending order
     sorted_lanes = sorted(range(len(lane_times)), key=lambda k: lane_times[k])
@@ -114,9 +105,9 @@ def display_signals(green_index, lane_times):
 # Main function to load images, process them, and give green signal
 def start_process():
     load_images()
-    vehicle_counts, ambulance_detected = process_images()
+    vehicle_counts = process_images()
     lane_times = calculate_time(vehicle_counts)
-    give_green_signal(lane_times, ambulance_detected)
+    give_green_signal(lane_times)
 
 # Start the process on window load
 start_process()
